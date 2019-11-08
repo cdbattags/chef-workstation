@@ -47,6 +47,11 @@ dependency "libzmq"
 # for train
 dependency "google-protobuf"
 
+# This is a transative dep but we need to build from source so binaries are built on current sdk.
+# Only matters on mac.
+# TODO: Contact gem mainter about getting new release. 
+# dependency "rb-fsevent-gem" if mac_os_x?
+
 build do
   env = with_standard_compiler_flags(with_embedded_path)
 
@@ -87,5 +92,12 @@ build do
   block "Delete bundler git installs" do
     gemdir = shellout!("#{install_dir}/embedded/bin/gem environment gemdir", env: env).stdout.chomp
     remove_directory "#{gemdir}/bundler"
+  end
+
+  block "Delete test folder from problem gems" do
+    %w{rubyzip mini_portile2}.each do |gem|
+      gem_install_dir = shellout!("VISUAL=echo #{install_dir}/embedded/bin/gem open #{gem}", env: env).stdout.chomp
+      remove_directory "#{gem_install_dir}/test"
+    end
   end
 end
